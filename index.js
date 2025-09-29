@@ -51,6 +51,7 @@ async function main() {
             db.run('DROP TABLE IF EXISTS Foods');
             db.run('DROP TABLE IF EXISTS Recipes');
             db.run('DROP TABLE IF EXISTS DietCharts');
+            db.run('DROP TABLE IF EXISTS DietChartMeals');
 
             // Create tables
             const createPatientsTableQuery = `
@@ -101,12 +102,24 @@ async function main() {
 
             const createRecipesTableQuery = `
                 CREATE TABLE Recipes (
-                    "RecipeID" INTEGER PRIMARY KEY AUTOINCREMENT,
+                    "RecipeID" VARCHAR(255) PRIMARY KEY,
                     "Recipe_Name" VARCHAR(255) NOT NULL,
                     "Ingredients" TEXT,
-                    "Cooking_Method" TEXT,
-                    "Total_Nutrition_per_Serving" TEXT,
-                    "Dosha_Suitability" VARCHAR(255)
+                    "Cooking_Method" VARCHAR(255),
+                    "Total_Calories_per_Serving" REAL,
+                    "Total_Protein_g" REAL,
+                    "Total_Fat_g" REAL,
+                    "Total_Carbs_g" REAL,
+                    "Total_Fiber_g" REAL,
+                    "Total_Vit_A_IU" REAL,
+                    "Total_Vit_C_mg" REAL,
+                    "Total_Vit_D_ug" REAL,
+                    "Total_Vit_E_mg" REAL,
+                    "Total_Iron_mg" REAL,
+                    "Total_Calcium_mg" REAL,
+                    "Total_Potassium_mg" REAL,
+                    "Dosha_Suitability" VARCHAR(255),
+                    "Linked_FoodIDs" TEXT
                 )
             `;
             db.run(createRecipesTableQuery);
@@ -114,24 +127,49 @@ async function main() {
 
             const createDietChartsTableQuery = `
                 CREATE TABLE DietCharts (
-                    "ChartID" INTEGER PRIMARY KEY AUTOINCREMENT,
+                    "ChartID" VARCHAR(255) PRIMARY KEY,
                     "PatientID" VARCHAR(255),
-                    "DateCreated" DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    "MealPlan" TEXT,
-                    "TotalDailyNutrition" TEXT,
-                    "AyurvedaComplianceNotes" TEXT,
-                    "ClinicalNotes" TEXT,
+                    "Date" DATETIME,
+                    "Total_Calories" REAL,
+                    "Total_Protein_g" REAL,
+                    "Total_Fat_g" REAL,
+                    "Total_Carbs_g" REAL,
+                    "Total_Fiber_g" REAL,
+                    "Clinical_Notes" TEXT,
                     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
                 )
             `;
             db.run(createDietChartsTableQuery);
             console.log('DietCharts table created');
 
+            const createDietChartMealsTableQuery = `
+                CREATE TABLE DietChartMeals (
+                    "ChartID" VARCHAR(255),
+                    "PatientID" VARCHAR(255),
+                    "Date" DATETIME,
+                    "Meal_Time" VARCHAR(255),
+                    "Item_Type" VARCHAR(255),
+                    "Item_ID" VARCHAR(255),
+                    "Portion_g_or_serving" VARCHAR(255),
+                    "Calories" REAL,
+                    "Protein_g" REAL,
+                    "Fat_g" REAL,
+                    "Carbs_g" REAL,
+                    "Fiber_g" REAL,
+                    "Ayurveda_Notes" TEXT,
+                    FOREIGN KEY (ChartID) REFERENCES DietCharts(ChartID),
+                    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
+                )
+            `;
+            db.run(createDietChartMealsTableQuery);
+            console.log('DietChartMeals table created');
+
             // Load data from CSVs
             await loadCsvData(db, 'Patient_Profile_1000.csv', 'Patients');
             await loadCsvData(db, 'Food_Database_10000.csv', 'Foods');
             await loadCsvData(db, 'Recipe_Database_600.csv', 'Recipes');
             await loadCsvData(db, 'Diet_Charts_Summary_2000.csv', 'DietCharts');
+            await loadCsvData(db, 'Diet_Charts_Meals_8000rows.csv', 'DietChartMeals');
 
         } catch (err) {
             console.error('An error occurred:', err);
